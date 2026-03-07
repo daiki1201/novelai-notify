@@ -2,8 +2,8 @@ name: NovelAI RSS Check
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # 30分ごとに実行
-  workflow_dispatch:  # 手動実行も可能
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
 
 jobs:
   check:
