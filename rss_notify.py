@@ -4,8 +4,8 @@ import json
 import os
 
 RSS_URL = "https://blog.novelai.net/feed"
-LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_USER_ID = os.environ.get("LINE_USER_ID")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 LAST_FILE = "last_entry.json"
 
 
@@ -38,21 +38,14 @@ def save_last(entry):
         json.dump(entry, f)
 
 
-def send_line_message(text):
-    url = "https://api.line.me/v2/bot/message/push"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
-    }
-    data = {
-        "to": LINE_USER_ID,
-        "messages": [{"type": "text", "text": text}],
-    }
-    response = requests.post(url, headers=headers, json=data)
+def send_telegram_message(text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    data = {"chat_id": TELEGRAM_CHAT_ID, "text": text}
+    response = requests.post(url, data=data)
     if response.status_code != 200:
-        print(f"LINE送信エラー: {response.status_code} {response.text}")
+        print(f"Telegram送信エラー: {response.status_code} {response.text}")
     else:
-        print("LINE通知送信成功")
+        print("Telegram通知送信成功")
 
 
 def main():
@@ -72,7 +65,7 @@ def main():
     if latest["link"] != last["link"]:
         # 新しい記事が投稿された
         text = f"【NovelAI新着記事】\n{latest['title']}\n{latest['link']}"
-        send_line_message(text)
+        send_telegram_message(text)
         save_last(latest)
     else:
         print("新しい記事なし")
