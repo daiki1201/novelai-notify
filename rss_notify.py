@@ -10,7 +10,7 @@ LAST_FILE = "last_entry.json"
 
 
 def get_latest_entry():
-    response = requests.get(RSS_URL, timeout=10)
+    response = requests.get(RSS_URL, timeout=10, allow_redirects=True)
     root = ET.fromstring(response.content)
     ns = {"atom": "http://www.w3.org/2005/Atom"}
 
