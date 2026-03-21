@@ -1,0 +1,40 @@
+name: Discord Channel Check
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore discord cache
+        uses: actions/cache@v4
+        with:
+          path: discord_last_messages.json
+          key: discord-last-messages-${{ github.run_id }}
+          restore-keys: discord-last-messages-
+
+      - name: Run discord check
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: python bot.py
+
+      - name: Save discord cache
+        uses: actions/cache/save@v4
+        with:
+          path: discord_last_messages.json
+          key: discord-last-messages-${{ github.run_id }}
