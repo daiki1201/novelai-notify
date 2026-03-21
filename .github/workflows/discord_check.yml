@@ -1,6 +1,13 @@
 name: Discord Channel Check
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - "bot.py"
+      - ".github/workflows/discord_check.yml"
+      - "requirements.txt"
   schedule:
     - cron: "0 * * * *"
   workflow_dispatch:
@@ -18,6 +25,14 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Check required secrets
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        run: |
+          python -c "import os; missing=[k for k in ['DISCORD_TOKEN','LINE_CHANNEL_ACCESS_TOKEN','LINE_USER_ID'] if not os.environ.get(k)]; print('Missing secrets: ' + ', '.join(missing) if missing else 'All required secrets are present'); raise SystemExit(1 if missing else 0)"
 
       - name: Restore discord cache
         uses: actions/cache@v4

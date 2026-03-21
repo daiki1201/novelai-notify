@@ -17,6 +17,20 @@ LINE_USER_ID = os.environ.get("LINE_USER_ID")
 STATE_FILE = "discord_last_messages.json"
 
 
+def validate_env():
+    missing = [
+        name
+        for name, value in {
+            "DISCORD_TOKEN": DISCORD_TOKEN,
+            "LINE_CHANNEL_ACCESS_TOKEN": LINE_CHANNEL_ACCESS_TOKEN,
+            "LINE_USER_ID": LINE_USER_ID,
+        }.items()
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+
+
 def load_state():
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -66,6 +80,7 @@ async def process_channel(channel_id, state):
     channel = client.get_channel(channel_id)
     if channel is None:
         channel = await client.fetch_channel(channel_id)
+    print(f"Checking channel {channel_id}")
 
     if last_seen_id is None:
         latest_messages = [message async for message in channel.history(limit=1)]
@@ -106,4 +121,5 @@ async def on_ready():
         await client.close()
 
 
+validate_env()
 client.run(DISCORD_TOKEN)
