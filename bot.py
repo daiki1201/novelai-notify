@@ -77,36 +77,42 @@ client = discord.Client(intents=intents)
 async def process_channel(channel_id, state):
     state_key = str(channel_id)
     last_seen_id = int(state[state_key]) if state_key in state else None
-    channel = client.get_channel(channel_id)
-    if channel is None:
-        channel = await client.fetch_channel(channel_id)
-    print(f"Checking channel {channel_id}")
 
-    if last_seen_id is None:
-        latest_messages = [message async for message in channel.history(limit=1)]
-        if latest_messages:
-            state[state_key] = latest_messages[0].id
-            print(f"Initialized channel {channel_id} with {latest_messages[0].id}")
-        else:
-            print(f"No messages found in channel {channel_id}")
-        return
+    try:
+        channel = client.get_channel(channel_id)
+        if channel is None:
+            channel = await client.fetch_channel(channel_id)
+        print(f"Checking channel {channel_id}")
 
-    after = discord.Object(id=last_seen_id)
-    new_messages = [
-        message
-        async for message in channel.history(limit=None, after=after, oldest_first=True)
-    ]
-    if not new_messages:
-        print(f"No new messages in channel {channel_id}")
-        return
+        if last_seen_id is None:
+            latest_messages = [message async for message in channel.history(limit=1)]
+            if latest_messages:
+                state[state_key] = latest_messages[0].id
+                print(f"Initialized channel {channel_id} with {latest_messages[0].id}")
+            else:
+                print(f"No messages found in channel {channel_id}")
+            return
 
-    for message in new_messages:
-        if message.author.bot:
-            continue
-        send_line_message(format_message(message))
-        print(f"LINE sent for channel {channel_id}: {message.id}")
+        after = discord.Object(id=last_seen_id)
+        new_messages = [
+            message
+            async for message in channel.history(limit=None, after=after, oldest_first=True)
+        ]
+        if not new_messages:
+            print(f"No new messages in channel {channel_id}")
+            return
 
-    state[state_key] = new_messages[-1].id
+        for message in new_messages:
+            if message.author.bot:
+                continue
+            send_line_message(format_message(message))
+            print(f"LINE sent for channel {channel_id}: {message.id}")
+
+        state[state_key] = new_messages[-1].id
+    except discord.Forbidden:
+        print(f"Missing access to channel {channel_id}")
+    except discord.HTTPException as exc:
+        print(f"Discord API error for channel {channel_id}: {exc}")
 
 
 @client.event
